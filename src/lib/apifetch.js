@@ -28,7 +28,6 @@ export const getAccessToken = async (code) => {
   const response = await fetch("https://accounts.spotify.com/api/token", {
     method: "POST",
     headers: {
-      "Content-Type": "application/x-www-form-urlencoded",
       Authorization: `Basic ${Buffer.from(`${API_CONFIG.clientId}:${API_CONFIG.clientSecret}`).toString("base64")}`,
     },
     body: params,
@@ -39,6 +38,25 @@ export const getAccessToken = async (code) => {
   }
 
   return response.json();
+};
+
+export const getClientCredentialsToken = async () => {
+  const response = await fetch("https://accounts.spotify.com/api/token", {
+    method: "POST",
+    headers: {
+      Authorization: `Basic ${Buffer.from(`${API_CONFIG.clientId}:${API_CONFIG.clientSecret}`).toString("base64")}`,
+    },
+    body: new URLSearchParams({
+      grant_type: "client_credentials",
+    }),
+  });
+
+  if (!response.ok) {
+    throw new Error("Failed to get client credentials token");
+  }
+
+  const data = await response.json();
+  return data.access_token;
 };
 
 const fetchWithAuth = async (endpoint, options = {}) => {
@@ -62,13 +80,26 @@ const fetchWithAuth = async (endpoint, options = {}) => {
 };
 
 export const searchTracks = async (query) => {
-  const params = new URLSearchParams({
-    q: query,
-    type: "track",
-    limit: 20,
-  });
+  try {
+    const token = await getClientCredentialsToken();
+    
+    const response = await fetch(
+      `https://api.spotify.com/v1/search?q=${encodeURIComponent(query)}&type=track,artist,album&limit=20`,
+      {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      }
+    );
 
-  return fetchWithAuth(`/search?${params.toString()}`);
+    if (!response.ok) {
+      throw new Error(`API request failed: ${response.status}`);
+    }
+
+    return response.json();
+  } catch (error) {
+    throw error;
+  }
 };
 
 export const getUserPlaylists = async () => {
@@ -97,4 +128,27 @@ export const addTracksToPlaylist = async (playlistId, uris) => {
     },
     body: JSON.stringify({ uris }),
   });
+};
+
+export const getTopTracks = async () => {
+  try {
+    const token = await getClientCredentialsToken();
+    
+    const response = await fetch(
+      "https://api.spotify.com/v1/playlists/3cEYpjA9oz9GiPac4AsH4n?market=SE",
+      {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      }
+    );
+
+    if (!response.ok) {
+      throw new Error(`API request failed: ${response.status}`);
+    }
+
+    return response.json();
+  } catch (error) {
+    throw error;
+  }
 };

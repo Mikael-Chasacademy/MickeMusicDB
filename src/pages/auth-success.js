@@ -7,9 +7,7 @@ export default function AuthSuccess() {
 
   useEffect(() => {
     if (token) {
-      // Spara token i localStorage
       localStorage.setItem("spotify_access_token", token);
-      // Redirecta tillbaka till huvudsidan
       router.push("/");
     }
   }, [token, router]);
