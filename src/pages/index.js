@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { getAuthUrl, getUserPlaylists, setAccessToken } from "../lib/apifetch";
 import { Geist, Geist_Mono } from "next/font/google";
+import { useRouter } from "next/router";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -15,6 +16,7 @@ const geistMono = Geist_Mono({
 
 export default function Home() {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const router = useRouter();
 
   // Hämta spellistor med React Query
   const {
@@ -75,7 +77,11 @@ export default function Home() {
         <h1 className="text-3xl font-bold mb-6">Dina Spellistor</h1>
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
           {playlists?.items?.map((playlist) => (
-            <div key={playlist.id} className="bg-white rounded-lg shadow-md overflow-hidden hover:shadow-lg transition-shadow">
+            <div 
+              key={playlist.id} 
+              className="bg-white rounded-lg shadow-md overflow-hidden hover:shadow-lg transition-shadow cursor-pointer"
+              onClick={() => router.push(`/playlist/${playlist.id}`)}
+            >
               {playlist.images[0] && <img src={playlist.images[0].url} alt={playlist.name} className="w-full h-48 object-cover" />}
               <div className="p-4">
                 <h2 className="text-xl font-semibold mb-2">{playlist.name}</h2>

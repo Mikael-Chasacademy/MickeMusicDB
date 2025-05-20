@@ -41,7 +41,7 @@ export const getAccessToken = async (code) => {
   return response.json();
 };
 
-const fetchWithAuth = async (endpoint, options = {}) => {
+export const fetchWithAuth = async (endpoint, options = {}) => {
   if (!accessToken) {
     throw new Error("No access token available");
   }
