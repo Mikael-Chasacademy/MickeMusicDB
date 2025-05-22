@@ -58,6 +58,10 @@ export const fetchWithAuth = async (endpoint, options = {}) => {
     throw new Error(`API request failed: ${response.statusText}`);
   }
 
+  if (options.method === 'DELETE' || response.status === 204) {
+    return null;
+  }
+
   return response.json();
 };
 
@@ -96,5 +100,29 @@ export const addTracksToPlaylist = async (playlistId, uris) => {
       "Content-Type": "application/json",
     },
     body: JSON.stringify({ uris }),
+  });
+};
+
+export const removeTrackFromPlaylist = async (playlistId, trackUri) => {
+  return fetchWithAuth(`/playlists/${playlistId}/tracks`, {
+    method: "DELETE",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({
+      tracks: [{ uri: trackUri }]
+    }),
+  });
+};
+
+export const logout = () => {
+  localStorage.removeItem("spotify_access_token");
+  accessToken = null;
+  window.location.href = "/";
+};
+
+export const deletePlaylist = async (playlistId) => {
+  return fetchWithAuth(`/playlists/${playlistId}/followers`, {
+    method: "DELETE",
   });
 };
