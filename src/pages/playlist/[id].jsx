@@ -1,6 +1,6 @@
 import { useQuery } from "@tanstack/react-query";
 import { useRouter } from "next/router";
-import { fetchWithAuth, removeTrackFromPlaylist } from "../../lib/apifetch";
+import { fetchWithAuth, removeTrackFromPlaylist, setAccessToken, updatePlaylist } from "../../lib/apifetch";
 import { useEffect, useState } from "react";
 import { Trash, ArrowLeft2 } from "iconsax-react";
 
@@ -9,15 +9,29 @@ export default function PlaylistDetails() {
   const { id } = router.query;
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [trackToDelete, setTrackToDelete] = useState(null);
+  const [isEditing, setIsEditing] = useState(false);
+  const [editedName, setEditedName] = useState("");
+  const [editedDescription, setEditedDescription] = useState("");
 
   useEffect(() => {
     const token = localStorage.getItem("spotify_access_token");
     if (token) {
+      setAccessToken(token);
       setIsAuthenticated(true);
     } else {
       router.push("/");
     }
   }, [router]);
+
+  // Hämta användarens profil för att jämföra med spellistans ägare
+  const {
+    data: userProfile,
+    isLoading: isLoadingProfile,
+  } = useQuery({
+    queryKey: ["userProfile"],
+    queryFn: () => fetchWithAuth("/me"),
+    enabled: isAuthenticated,
+  });
 
   const {
     data: playlist,
@@ -51,11 +65,36 @@ export default function PlaylistDetails() {
     setTrackToDelete(null);
   };
 
+  const handleEditClick = () => {
+    setEditedName(playlist.name);
+    setEditedDescription(playlist.description || "");
+    setIsEditing(true);
+  };
+
+  const handleCancelEdit = () => {
+    setIsEditing(false);
+    setEditedName("");
+    setEditedDescription("");
+  };
+
+  const handleSaveEdit = async () => {
+    try {
+      await updatePlaylist(id, editedName, editedDescription);
+      setIsEditing(false);
+      refetchPlaylist();
+    } catch (error) {
+      console.error("Fel vid uppdatering av spellista:", error);
+    }
+  };
+
+  // Kontrollera om användaren är ägaren av spellistan
+  const isOwner = userProfile?.id === playlist?.owner?.id;
+
   if (!isAuthenticated) {
     return null;
   }
 
-  if (isLoading) {
+  if (isLoading || isLoadingProfile) {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <p className="text-xl">Laddar spellista...</p>
@@ -80,7 +119,7 @@ export default function PlaylistDetails() {
         >
           <ArrowLeft2 color="blue" size={20} />
           Tillbaka till spellistor
-          </button>
+        </button>
 
         <div className={`${trackToDelete ? 'blur-sm' : ''}`}>
           <div className="bg-white rounded-lg shadow-md p-6 mb-6">
@@ -92,12 +131,57 @@ export default function PlaylistDetails() {
                   className="w-48 h-48 object-cover rounded-lg shadow-md"
                 />
               )}
-              <div>
-                <h1 className="text-3xl font-bold mb-2">{playlist?.name}</h1>
-                <p className="text-gray-600 mb-4">{playlist?.description}</p>
-                <div className="flex gap-4 text-sm text-gray-500">
-                  <span>{playlist?.tracks?.total} låtar</span>
-                  <span>{playlist?.followers?.total} följare</span>
+              <div className="flex-1">
+                <div className="flex justify-between items-start">
+                  <div className="flex-1">
+                    {isEditing ? (
+                      <div className="space-y-4">
+                        <input
+                          type="text"
+                          value={editedName}
+                          onChange={(e) => setEditedName(e.target.value)}
+                          className="text-3xl font-bold w-full p-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        />
+                        <textarea
+                          value={editedDescription}
+                          onChange={(e) => setEditedDescription(e.target.value)}
+                          className="w-full p-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                          rows="3"
+                        />
+                        <div className="flex gap-2">
+                          <button
+                            onClick={handleSaveEdit}
+                            className="bg-green-500 text-white px-4 py-2 rounded-lg hover:bg-green-600 transition-colors"
+                          >
+                            Done
+                          </button>
+                          <button
+                            onClick={handleCancelEdit}
+                            className="bg-gray-200 text-gray-700 px-4 py-2 rounded-lg hover:bg-gray-300 transition-colors"
+                          >
+                            Cancel
+                          </button>
+                        </div>
+                      </div>
+                    ) : (
+                      <>
+                        <h1 className="text-3xl font-bold mb-2">{playlist?.name}</h1>
+                        <p className="text-gray-600 mb-4">{playlist?.description}</p>
+                        <div className="flex gap-4 text-sm text-gray-500">
+                          <span>{playlist?.tracks?.total} låtar</span>
+                          <span>{playlist?.followers?.total} följare</span>
+                        </div>
+                      </>
+                    )}
+                  </div>
+                  {!isEditing && isOwner && (
+                    <button
+                      onClick={handleEditClick}
+                      className="bg-blue-500 text-white px-4 py-2 rounded-lg cursor-pointer hover:bg-blue-600 transition-colors"
+                    >
+                      Edit
+                    </button>
+                  )}
                 </div>
               </div>
             </div>
@@ -134,7 +218,7 @@ export default function PlaylistDetails() {
                         <span className="text-sm text-gray-500">{item.track.album.name}</span>
                         <button
                           onClick={(e) => handleDeleteClick(e, item)}
-                          className="opacity-0 group-hover:opacity-100 hover:cursor-pointer transition-opacity bg-red-500 text-white p-2 rounded-full hover:bg-red-600"
+                          className="opacity-0 group-hover:opacity-100 hover:cursor-pointer transition-opacity bg-red-500 text-white p-2 rounded-lg hover:bg-red-600"
                         >
                           <Trash color="white" size={20} variant="outline" />
                         </button>
