@@ -2,7 +2,8 @@ import { useQuery } from "@tanstack/react-query";
 import { useRouter } from "next/router";
 import { fetchWithAuth, removeTrackFromPlaylist, setAccessToken, updatePlaylist } from "../../lib/apifetch";
 import { useEffect, useState } from "react";
-import { Trash, ArrowLeft2 } from "iconsax-react";
+import { ArrowLeft2 } from "iconsax-react";
+import DeleteBtn from "../../components/deletebtn";
 
 export default function PlaylistDetails() {
   const router = useRouter();
@@ -122,7 +123,7 @@ export default function PlaylistDetails() {
         </button>
 
         <div className={`${trackToDelete ? 'blur-sm' : ''}`}>
-          <div className="bg-white rounded-lg shadow-md p-6 mb-6">
+          <div className="bg-white rounded-lg shadow-md p-6 mb-6 sticky top-0 z-10">
             <div className="flex items-start gap-6">
               {playlist?.images?.[0] && (
                 <img
@@ -212,16 +213,16 @@ export default function PlaylistDetails() {
                           <p className="text-sm text-gray-500">
                             {item.track.artists.map(artist => artist.name).join(", ")}
                           </p>
+                          <p className="text-sm text-gray-400">
+                            {item.track.album.name}
+                          </p>
                         </div>
                       </div>
-                      <div className="flex items-center space-x-4">
-                        <span className="text-sm text-gray-500">{item.track.album.name}</span>
-                        <button
-                          onClick={(e) => handleDeleteClick(e, item)}
-                          className="opacity-0 group-hover:opacity-100 hover:cursor-pointer transition-opacity bg-red-500 text-white p-2 rounded-lg hover:bg-red-600"
-                        >
-                          <Trash color="white" size={20} variant="outline" />
-                        </button>
+                      <div className="flex items-center">
+                        <DeleteBtn 
+                          onClick={(e) => handleDeleteClick(e, item)} 
+                          className=" !top-1/2 !right-2 !-translate-y-1/2"
+                        />
                       </div>
                     </div>
                   ))}

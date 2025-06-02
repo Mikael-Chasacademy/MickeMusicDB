@@ -1,12 +1,13 @@
 import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { searchTracks } from "../lib/apifetch";
-import { SearchNormal1, Add, CloseCircle } from "iconsax-react";
+import { SearchNormal1, CloseCircle } from "iconsax-react";
+import AddBtn from "./addbtn";
 
 export default function SearchBar({ onTrackSelect }) {
   const [searchQuery, setSearchQuery] = useState("");
 
-  // Sökresultat
+  
   const {
     data: searchResults,
     isLoading: isSearching,
@@ -70,12 +71,7 @@ export default function SearchBar({ onTrackSelect }) {
                       <p className="text-gray-600">{track.artists.map(artist => artist.name).join(", ")}</p>
                     </div>
                   </div>
-                  <button
-                    onClick={() => onTrackSelect(track)}
-                    className="p-2 text-gray-600 hover:text-gray-800 cursor-pointer hover:bg-green-100 rounded-lg transition-colors"
-                  >
-                    <Add color="green" size={20} />
-                  </button>
+                  <AddBtn onClick={() => onTrackSelect(track)} />
                 </div>
               ))}
             </div>

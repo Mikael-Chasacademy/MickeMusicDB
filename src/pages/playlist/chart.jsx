@@ -1,7 +1,7 @@
 import { useQuery } from "@tanstack/react-query";
 import { getDeezerTopTracks, searchSpotifyTrackByTitleAndArtist } from "../../lib/apifetch";
-import { Add } from "iconsax-react";
 import { useState } from "react";
+import AddBtn from "../../components/addbtn";
 
 export default function Chart({ onTrackSelect }) {
   const [isLoadingTrack, setIsLoadingTrack] = useState(false);
@@ -51,39 +51,37 @@ export default function Chart({ onTrackSelect }) {
   }
 
   return (
-    <div className="space-y-4">
+    <div>
       {error && (
         <div className="bg-red-50 text-red-500 p-4 rounded-lg mb-4">
           {error}
         </div>
       )}
-      {topTracks?.data?.map((track) => (
-        <div
-          key={track.id}
-          className="flex items-center justify-between p-4 hover:bg-gray-50 rounded-lg"
-        >
-          <div className="flex items-center gap-4 flex-1">
-            {track.album?.cover_medium && (
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+        {topTracks?.data?.map((track) => (
+          <div
+            key={track.id}
+            className="bg-white rounded-lg shadow-md overflow-hidden hover:shadow-lg transition-shadow relative group hover:bg-gray-50"
+          >
+            {track.album?.cover_medium ? (
               <img
                 src={track.album.cover_medium}
                 alt={track.title}
-                className="w-12 h-12 rounded"
+                className="w-full h-48 object-cover"
               />
+            ) : (
+              <div className="w-full h-48 bg-gray-200 flex items-center justify-center">
+                <span className="text-gray-400">Ingen bild</span>
+              </div>
             )}
-            <div>
-              <h3 className="font-semibold">{track.title}</h3>
-              <p className="text-gray-600">{track.artist.name}</p>
+            <div className="p-4">
+              <h3 className="font-semibold text-lg mb-1 truncate">{track.title}</h3>
+              <p className="text-gray-600 text-sm truncate">{track.artist.name}</p>
             </div>
+            <AddBtn onClick={() => handleTrackClick(track)} disabled={isLoadingTrack} floating={true} />
           </div>
-          <button
-            onClick={() => handleTrackClick(track)}
-            disabled={isLoadingTrack}
-            className="p-2 text-gray-600 hover:text-gray-800 active:bg-green-100 rounded-lg transition-colors disabled:opacity-50"
-          >
-            <Add color="green" size={20} />
-          </button>
-        </div>
-      ))}
+        ))}
+      </div>
     </div>
   );
 }
