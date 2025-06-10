@@ -62,9 +62,7 @@ export default function Home() {
       setNewPlaylistName("");
       setNewPlaylistDescription("");
       setShowCreateForm(false);
-      setTimeout(() => {
-        refetchPlaylists();
-      }, 1000);
+      await refetchPlaylists();
     } catch (error) {
       console.error("Fel vid skapande av spellista:", error);
     } finally {
